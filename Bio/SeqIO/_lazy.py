@@ -32,9 +32,9 @@ records may not trigger an exception unless the problem region is requested.
 This is by design.
 """
 
-from Bio.SeqRecord import SeqRecord
+from ..SeqRecord import SeqRecord, _RestrictedDict
 
-class SeqRecordProxy(SeqRecord):
+class SeqRecordProxyBase(SeqRecord):
     """A SeqRecord object holds a sequence and information about it.
 
     Main attributes:
@@ -59,39 +59,15 @@ class SeqRecordProxy(SeqRecord):
     SeqRecord objects.  However, you may want to create your own SeqRecord
     objects directly (see the __init__ method for further details):
 
-    >>> from Bio.Seq import Seq
-    >>> from Bio.SeqRecord import SeqRecord
-    >>> from Bio.Alphabet import IUPAC
-    >>> record = SeqRecord(Seq("MKQHKAMIVALIVICITAVVAALVTRKDLCEVHIRTGQTEVAVF",
-    ...                         IUPAC.protein),
-    ...                    id="YP_025292.1", name="HokC",
-    ...                    description="toxic membrane protein")
-    >>> print(record)
-    ID: YP_025292.1
-    Name: HokC
-    Description: toxic membrane protein
-    Number of features: 0
-    Seq('MKQHKAMIVALIVICITAVVAALVTRKDLCEVHIRTGQTEVAVF', IUPACProtein())
 
-    If you want to save SeqRecord objects to a sequence file, use Bio.SeqIO
-    for this.  For the special case where you want the SeqRecord turned into
-    a string in a particular file format there is a format method which uses
-    Bio.SeqIO internally:
 
-    >>> print(record.format("fasta"))
-    >YP_025292.1 toxic membrane protein
-    MKQHKAMIVALIVICITAVVAALVTRKDLCEVHIRTGQTEVAVF
-    <BLANKLINE>
+    #subclassing to-do list
+    attributes that must be filled
+     -      self._seq_len    :::   int
 
-    You can also do things like slicing a SeqRecord, checking its length, etc
+    methods need implementation by derived class:
 
-    >>> len(record)
-    44
-    >>> edited = record[:10] + record[11:]
-    >>> print(edited.seq)
-    MKQHKAMIVAIVICITAVVAALVTRKDLCEVHIRTGQTEVAVF
-    >>> print(record.seq)
-    MKQHKAMIVALIVICITAVVAALVTRKDLCEVHIRTGQTEVAVF
+
 
     """
     def __init__(self, seq, id = "<unknown id>", name = "<unknown name>",
@@ -648,290 +624,43 @@ class SeqRecordProxy(SeqRecord):
         For example, using Bio.SeqIO to read in a FASTA nucleotide file:
 
         >>> from Bio import SeqIO
-        >>> record = SeqIO.read("Fasta/sweetpea.nu", "fasta")
+        >>> record = SeqIO.read("Fasta/sweetpea.nu", "fasta", lazy=True)
         >>> len(record)
         309
         >>> len(record.seq)
         309
         """
-        return len(self.seq)
+        return len(self._seq_len)
 
     
     #ep
+    
     #def __bool__(self):
     #__nonzero__= __bool__
 
-    #ep
-    def __add__(self, other):
-        """The proxy seq record should not have concatentate methods.
-        """
-        raise TypeError("concatenation is not supported in SeqRecordProxy objects")
-    #ep
-    def __radd__(self, other):
-        """The proxy seq record should not have concatenate methods.
+    #returns non-proxy class where possible
+    #def __add__(self, other):
+    #def __radd__(self, other):
 
-        any attmpts to use this for concatenation via overloading the +
-        will result in raised errors.
-
-        >>> from Bio import SeqIO
-        >>> newRec = SeqIO.read("fasta/f001", "fasta", lazy=True)
-        >>> print("%s %s" % (newRec.id, newRec.seq[0:10]))
-        gi|3318709|pdb|1A91| MENLNMDLLY
-
-        >>> new = SeqIO.read("fasta/f001", "fasta")
-        >>> concaenated = new + newRec
-        TypeError: concatenation is not supported in SeqRecordProxy objects
-        """
-        raise TypeError("concatenation is not supported in SeqRecordProxy objects")
 
     def upper(self):
         """Returns a copy of the record with an upper case sequence.
 
-        All the annotation is preserved unchanged. e.g.
-
-        >>> from Bio.Alphabet import generic_dna
-        >>> from Bio.Seq import Seq
-        >>> from Bio.SeqRecord import SeqRecord
-        >>> record = SeqRecord(Seq("acgtACGT", generic_dna), id="Test",
-        ...                    description = "Made up for this example")
-        >>> record.letter_annotations["phred_quality"] = [1, 2, 3, 4, 5, 6, 7, 8]
-        >>> print(record.upper().format("fastq"))
-        @Test Made up for this example
-        ACGTACGT
-        +
-        "#$%&'()
-        <BLANKLINE>
-
-        Naturally, there is a matching lower method:
-
-        >>> print(record.lower().format("fastq"))
-        @Test Made up for this example
-        acgtacgt
-        +
-        "#$%&'()
-        <BLANKLINE>
+           proxy class needs a new implementation
         """
-        return SeqRecord(self.seq.upper(),
-                         id = self.id, name = self.name,
-                         description = self.description,
-                         dbxrefs = self.dbxrefs[:],
-                         features = self.features[:],
-                         annotations = self.annotations.copy(),
-                         letter_annotations=self.letter_annotations.copy())
+        raise NotImplementedError(" this needs to be implemnted")
+        #return SeqRecord(self.seq.upper(),
+        #                 ...)
+
 
     def lower(self):
         """Returns a copy of the record with a lower case sequence.
 
-        All the annotation is preserved unchanged. e.g.
-
-        >>> from Bio import SeqIO
-        >>> record = SeqIO.read("Fasta/aster.pro", "fasta")
-        >>> print(record.format("fasta"))
-        >gi|3298468|dbj|BAA31520.1| SAMIPF
-        GGHVNPAVTFGAFVGGNITLLRGIVYIIAQLLGSTVACLLLKFVTNDMAVGVFSLSAGVG
-        VTNALVFEIVMTFGLVYTVYATAIDPKKGSLGTIAPIAIGFIVGANI
-        <BLANKLINE>
-        >>> print(record.lower().format("fasta"))
-        >gi|3298468|dbj|BAA31520.1| SAMIPF
-        gghvnpavtfgafvggnitllrgivyiiaqllgstvaclllkfvtndmavgvfslsagvg
-        vtnalvfeivmtfglvytvyataidpkkgslgtiapiaigfivgani
-        <BLANKLINE>
-
-        To take a more annotation rich example,
-
-        >>> from Bio import SeqIO
-        >>> old = SeqIO.read("EMBL/TRBG361.embl", "embl")
-        >>> len(old.features)
-        3
-        >>> new = old.lower()
-        >>> len(old.features) == len(new.features)
-        True
-        >>> old.annotations["organism"] == new.annotations["organism"]
-        True
-        >>> old.dbxrefs == new.dbxrefs
-        True
+        possibly do something clever or get implemnted by the derived class
         """
-        return SeqRecord(self.seq.lower(),
-                         id = self.id, name = self.name,
-                         description = self.description,
-                         dbxrefs = self.dbxrefs[:],
-                         features = self.features[:],
-                         annotations = self.annotations.copy(),
-                         letter_annotations=self.letter_annotations.copy())
+        raise NotImplementedError(" this needs to be implemnted")
 
-    def reverse_complement(self, id=False, name=False, description=False,
-                           features=True, annotations=False,
-                           letter_annotations=True, dbxrefs=False):
-        """Returns new SeqRecord with reverse complement sequence.
+    # All methods tagged below are implemened in the base class
+    #def reverse_complement(self, id=False, name=False, description=False,
+    #def __radd__(self, other):
 
-        You can specify the returned record's id, name and description as
-        strings, or True to keep that of the parent, or False for a default.
-
-        You can specify the returned record's features with a list of
-        SeqFeature objects, or True to keep that of the parent, or False to
-        omit them. The default is to keep the original features (with the
-        strand and locations adjusted).
-
-        You can also specify both the returned record's annotations and
-        letter_annotations as dictionaries, True to keep that of the parent,
-        or False to omit them. The default is to keep the original
-        annotations (with the letter annotations reversed).
-
-        To show what happens to the pre-letter annotations, consider an
-        example Solexa variant FASTQ file with a single entry, which we'll
-        read in as a SeqRecord:
-
-        >>> from Bio import SeqIO
-        >>> record = SeqIO.read("Quality/solexa_faked.fastq", "fastq-solexa")
-        >>> print("%s %s" % (record.id, record.seq))
-        slxa_0001_1_0001_01 ACGTACGTACGTACGTACGTACGTACGTACGTACGTACGTNNNNNN
-        >>> print(list(record.letter_annotations))
-        ['solexa_quality']
-        >>> print(record.letter_annotations["solexa_quality"])
-        [40, 39, 38, 37, 36, 35, 34, 33, 32, 31, 30, 29, 28, 27, 26, 25, 24, 23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12, 11, 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0, -1, -2, -3, -4, -5]
-
-        Now take the reverse complement,
-
-        >>> rc_record = record.reverse_complement(id=record.id+"_rc")
-        >>> print("%s %s" % (rc_record.id, rc_record.seq))
-        slxa_0001_1_0001_01_rc NNNNNNACGTACGTACGTACGTACGTACGTACGTACGTACGTACGT
-
-        Notice that the per-letter-annotations have also been reversed,
-        although this may not be appropriate for all cases.
-
-        >>> print(rc_record.letter_annotations["solexa_quality"])
-        [-5, -4, -3, -2, -1, 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40]
-
-        Now for the features, we need a different example. Parsing a GenBank
-        file is probably the easiest way to get an nice example with features
-        in it...
-
-        >>> from Bio import SeqIO
-        >>> with open("GenBank/pBAD30.gb") as handle:
-        ...     plasmid = SeqIO.read(handle, "gb")
-        >>> print("%s %i" % (plasmid.id, len(plasmid)))
-        pBAD30 4923
-        >>> plasmid.seq
-        Seq('GCTAGCGGAGTGTATACTGGCTTACTATGTTGGCACTGATGAGGGTGTCAGTGA...ATG', IUPACAmbiguousDNA())
-        >>> len(plasmid.features)
-        13
-
-        Now, let's take the reverse complement of this whole plasmid:
-
-        >>> rc_plasmid = plasmid.reverse_complement(id=plasmid.id+"_rc")
-        >>> print("%s %i" % (rc_plasmid.id, len(rc_plasmid)))
-        pBAD30_rc 4923
-        >>> rc_plasmid.seq
-        Seq('CATGGGCAAATATTATACGCAAGGCGACAAGGTGCTGATGCCGCTGGCGATTCA...AGC', IUPACAmbiguousDNA())
-        >>> len(rc_plasmid.features)
-        13
-
-        Let's compare the first CDS feature - it has gone from being the
-        second feature (index 1) to the second last feature (index -2), its
-        strand has changed, and the location switched round.
-
-        >>> print(plasmid.features[1])
-        type: CDS
-        location: [1081:1960](-)
-        qualifiers: 
-            Key: label, Value: ['araC']
-            Key: note, Value: ['araC regulator of the arabinose BAD promoter']
-            Key: vntifkey, Value: ['4']
-        <BLANKLINE>
-        >>> print(rc_plasmid.features[-2])
-        type: CDS
-        location: [2963:3842](+)
-        qualifiers: 
-            Key: label, Value: ['araC']
-            Key: note, Value: ['araC regulator of the arabinose BAD promoter']
-            Key: vntifkey, Value: ['4']
-        <BLANKLINE>
-
-        You can check this new location, based on the length of the plasmid:
-
-        >>> len(plasmid) - 1081
-        3842
-        >>> len(plasmid) - 1960
-        2963
-
-        Note that if the SeqFeature annotation includes any strand specific
-        information (e.g. base changes for a SNP), this information is not
-        ammended, and would need correction after the reverse complement.
-
-        Note trying to reverse complement a protein SeqRecord raises an
-        exception:
-
-        >>> from Bio.SeqRecord import SeqRecord
-        >>> from Bio.Seq import Seq
-        >>> from Bio.Alphabet import IUPAC
-        >>> protein_rec = SeqRecord(Seq("MAIVMGR", IUPAC.protein), id="Test")
-        >>> protein_rec.reverse_complement()
-        Traceback (most recent call last):
-           ...
-        ValueError: Proteins do not have complements!
-
-        Also note you can reverse complement a SeqRecord using a MutableSeq:
-
-        >>> from Bio.SeqRecord import SeqRecord
-        >>> from Bio.Seq import MutableSeq
-        >>> from Bio.Alphabet import generic_dna
-        >>> rec = SeqRecord(MutableSeq("ACGT", generic_dna), id="Test")
-        >>> rec.seq[0] = "T"
-        >>> print("%s %s" % (rec.id, rec.seq))
-        Test TCGT
-        >>> rc = rec.reverse_complement(id=True)
-        >>> print("%s %s" % (rc.id, rc.seq))
-        Test ACGA
-        """
-        from Bio.Seq import MutableSeq  # Lazy to avoid circular imports
-        if isinstance(self.seq, MutableSeq):
-            #Currently the MutableSeq reverse complement is in situ
-            answer = SeqRecord(self.seq.toseq().reverse_complement())
-        else:
-            answer = SeqRecord(self.seq.reverse_complement())
-        if isinstance(id, basestring):
-            answer.id = id
-        elif id:
-            answer.id = self.id
-        if isinstance(name, basestring):
-            answer.name = name
-        elif name:
-            answer.name = self.name
-        if isinstance(description, basestring):
-            answer.description = description
-        elif description:
-            answer.description = self.description
-        if isinstance(dbxrefs, list):
-            answer.dbxrefs = dbxrefs
-        elif dbxrefs:
-            #Copy the old dbxrefs
-            answer.dbxrefs = self.dbxrefs[:]
-        if isinstance(features, list):
-            answer.features = features
-        elif features:
-            #Copy the old features, adjusting location and string
-            l = len(answer)
-            answer.features = [f._flip(l) for f in self.features]
-            #The old list should have been sorted by start location,
-            #reversing it will leave it sorted by what is now the end position,
-            #so we need to resort in case of overlapping features.
-            #NOTE - In the common case of gene before CDS (and similar) with
-            #the exact same locations, this will still maintain gene before CDS
-            answer.features.sort(key=lambda x: x.location.start.position)
-        if isinstance(annotations, dict):
-            answer.annotations = annotations
-        elif annotations:
-            #Copy the old annotations,
-            answer.annotations = self.annotations.copy()
-        if isinstance(letter_annotations, dict):
-            answer.letter_annotations = letter_annotations
-        elif letter_annotations:
-            #Copy the old per letter annotations, reversing them
-            for key, value in self.letter_annotations.items():
-                answer._per_letter_annotations[key] = value[::-1]
-        return answer
-
-
-if __name__ == "__main__":
-    from Bio._utils import run_doctest
-    run_doctest()
