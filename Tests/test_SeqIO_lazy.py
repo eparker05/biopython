@@ -5,8 +5,7 @@
 
 import unittest
 from Bio import SeqRecord
-from Bio import SeqIO
-
+from Bio.SeqIO import _lazy
 
 class SeqRecordProxyBaseClassTests(unittest.TestCase):
 
@@ -15,7 +14,7 @@ class SeqRecordProxyBaseClassTests(unittest.TestCase):
 
     def test_nothing(self):
         """An addition test"""
-        a = SeqIO._lazy.SeqRecordProxyBase()
+        a = _lazy.SeqRecordProxyBase("sequencefake", "fakeid")
         self.assertEqual(5, 5)
 
 if __name__ == "__main__":
