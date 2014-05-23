@@ -457,7 +457,9 @@ class TestSeqRecordBaseClass(SeqRecordProxyBase):
     seq = property(fget=lambda self: self._seq,
                    fset=_set_seq,
                    doc="The sequence itself, as a Seq or MutableSeq object.")
-    
+
+
+                   
 if __name__ == "__main__":
     import unittest
     #from Bio import SeqRecord
