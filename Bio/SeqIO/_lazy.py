@@ -201,7 +201,7 @@ class SeqRecordProxyBase(SeqRecord):
             seqrepr = "seq=%s" % repr(self.seq)                 
         return self.__class__.__name__ \
          + "(%s, %s, %s, %s, %s)" \
-         % (`seqrepr, idrepr, namerepr, descriptionrepr, dbxrefsrepr)
+         % (seqrepr, idrepr, namerepr, descriptionrepr, dbxrefsrepr)
 
 
     # All methods tagged below are implemented in the base class
@@ -359,9 +359,26 @@ if __name__ == "__main__":
             self.assertEqual("SEQUENCEFAKE", str(b._seq))
 
         def test_lower(self):
-            a = TestSeqRecordBaseClass("seQUencefake", "fakeid")
+            a = TestSeqRecordBaseClass("seQUEncefake", "fakeid")
             b = a.lower()
             self.assertEqual("sequencefake", str(b._seq))
+
+        def test_repr(self):
+            out = r"""TestSeqRecordBaseClass(seq=NOT_READ, id=fakeid, """ + \
+                  r"""name=<unknown name>, description=<unknown description>, dbxrefs=[])"""
+            out2 = r"""TestSeqRecordBaseClass(seq=Seq('sequencefake', Alphabet()), id=fakeid, """ + \
+                  r"""name=<unknown name>, description=<unknown description>, dbxrefs=[])"""
+            a = TestSeqRecordBaseClass("sequencefake", "fakeid")
+            self.assertEqual(out, repr(a))
+            s = a.seq 
+            self.assertEqual(out2, repr(a))
+
+        def test_len_method(self):
+            a = TestSeqRecordBaseClass("sequencefake", "fakeid")
+            b = a[3:6]
+            self.assertEqual(3, len(b))
+            self.assertEqual(None, b._seq)
+            self.assertEqual(len("sequencefake"), len(a))
     
     a = TestSeqRecordBaseClass("seQUencefake", "fakeid")
     unittest.main( exit=False )
