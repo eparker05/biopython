@@ -1417,3 +1417,9 @@ class GenbankSeqRecProxy(_lazy.SeqRecordProxyBase):
             raise ValueError("File not formatted correctly")
         sequence = sequence.upper()
         self._seq = Seq(sequence, self._alphabet)
+
+    def _make_feature_index(self, new_list):
+        pass
+
+    def _read_features(self):
+        return []
