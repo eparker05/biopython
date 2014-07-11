@@ -1416,7 +1416,6 @@ class GenbankSeqRecProxy(_lazy.SeqRecordProxyBase):
         while readchars < lengthtoget:
             next_line = _bytes_to_string(handle.readline())[10:].strip()
             next_line = "".join(next_line.split())
-            next_line = "".join(let for let in next_line if let != " ")
             if not next_line:
                 break
             else:
@@ -1425,9 +1424,9 @@ class GenbankSeqRecProxy(_lazy.SeqRecordProxyBase):
 
         #fix the last line and assign the _seq attribute
         last_line_index = end%sequencewidth
-        linelist[-1] = linelist[-1][0:last_line_index]
+        if last_line_index:
+            linelist[-1] = linelist[-1][0:last_line_index]
         sequence = "".join(linelist)
-        print(sequence)
         if len(sequence) != len(self):
             raise ValueError("File not formatted correctly")
         sequence = sequence.upper()
