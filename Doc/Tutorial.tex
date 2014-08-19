@@ -2691,15 +2691,18 @@ then this sort of annotation information is much easier to deal with.
 \subsection{Lazy-loading for very large records}
 \label{sec:SeqIO-parse-with-lazy}
 
-Lazy-loading records can be used to efficiently and quickly fetch
-sequence records from an index. Specific data is parsed on demand
-rather than on initialization. These records can be returned by both
-\verb|SeqIO.parse| and \verb|SeqIO.read|. In
-Section~\ref{sec:SeqIO-lazy-index}, the use of a lazy-loading
-record is discussed in detail.
+Lazy loading parsers can be used to efficiently and quickly fetch sequence
+records from an index. Generally speaking, lazy loading is a design pattern
+used to defer initialization of an object until the point at which it is
+needed. In the context of sequence records, specific data is parsed on demand
+rather than on initialization. The sequence and features are of primary concern
+since they generally make up the largest portion of a sequence file. These
+records can be returned by both \verb|SeqIO.parse| and \verb|SeqIO.read|. In
+Section~\ref{sec:SeqIO-lazy-index}, the use of a lazy loading record is
+discussed in detail.
 
 To return lazy loading records from \verb|SeqIO.parse| or
-\verb|SeqIO.read|, call the function with the kwarg \verb|lazy|
+\verb|SeqIO.read|, call the function with the keyword argument \verb|lazy|
 set to \verb|True| or set to the file path of an index sqlite database
 file. Blank files will be written as a new index database. Using the
 boolean \verb|True| will return memory-only lazy records. The following
@@ -3307,20 +3310,20 @@ ACCESSION   GQ333173
 //
 \end{verbatim}
 
-\subsection{Lazy-Loading of Large Records}
+\subsection{Lazy loading index for large records}
 \label{sec:SeqIO-lazy-index}
 
 A problem encountered with large sequence files is that sometimes only
 small segments or specific attributes will be required. To account for
-this use case, the lazy-loading parsers were developed. These parsers
+this use case, the lazy loading parsers were developed. These parsers
 speed instantiation of indexed records, reduce overall memory consumption,
-and facilitate targeted data retrieval. Currently the lazy parsers support
-Fasta, GenBank, EMBL, and Uniprot-XML file formats.
+and facilitate targeted data retrieval. Currently lazy parsers have been
+developed for Fasta, GenBank, EMBL, and Uniprot-XML file formats.
 
 The lazy loading system works through the \verb|index_db| parser described
 in Section~\ref{sec:SeqIO-index-db} and is accessed by setting the
-\verb|lazy| kwarg to \verb|True|. Instead of a SeqRecord, the lazy parser
-will return a class derived from SeqRecord that transparently loads data
+\verb|lazy| keyword argument to \verb|True|. Instead of a SeqRecord, the lazy
+parser will return a class derived from SeqRecord that transparently loads data
 from the record file when needed. Note that \verb|SeqIO.parse| and
 \verb|SeqIO.read| can also be made to return lazy loading records, see
 Section~\ref{sec:SeqIO-parse-with-lazy} for details.
@@ -3356,10 +3359,16 @@ description='Homo sapiens chromosome 1, GRCh38 Primary Assembly.',
 dbxrefs=['BioProject:PRJNA168 Assembly:GCF_000001405.26'])
 \end{verbatim}
 
+Notice that a \verb|GenbankSeqRecProxy| is returned rather than a
+\verb|SeqRecord|. As mentioned earlier, each lazy loading format has a parser
+class that inherits from \verb|SeqRecord| and implements the specific
+operations required for lazy loading.
+
 At this point, the record exists primarily as the parsed header information
-and index information stored in the database. Notice that while many attributes
-have been read, the sequence attribute remains empty. To fetch part of the
-sequence, one should operate a slice on the record object.
+and index information stored in the database. While many attributes have
+been read, the sequence attribute remains empty and is represented as
+NOT\_READ above. To fetch part of the sequence, one can operate a slice on
+the record object.
 
 \begin{verbatim}
 >>> # lazily loading the the second million residues
@@ -3369,17 +3378,17 @@ Seq('GTGGAGCGCGCCGCCACGGACCACGGGCGGGCTGGCGGGCGAGCGGCGAGCGCG...TAC',
 IUPACAmbiguousDNA())
 \end{verbatim}
 
-Notice that target sequence is assigned by first slicing the record, then
-fetching the seq attribute. Had the seq attribute been fetched prior to slicing
-as shown below, all 250 million basepairs would be read into memory resulting
-in a significant and unnecessary slow-down.
+The sequence is assigned by first slicing the record, then fetching the seq
+attribute. Had the seq attribute been fetched prior to slicing as shown
+below, all 250 million basepairs would be read into memory resulting in a
+significant and unnecessary slow-down.
 
 \begin{verbatim}
 >>> # Don't do this: a slow way of fetching the same information
 >>> slow_sequence = chr1_record.seq[1000000:2000000]
 \end{verbatim}
 
-As with sequence information, features are also subject to lazy indexing.
+As with sequence information, features are also subject to lazy loading.
 The feature index information is left on-disk until features are requested,
 at which point the indexes are loaded from the database and the features
 are read from the file. Using the \verb|chr1_record| defined in the example
@@ -3404,7 +3413,7 @@ are much faster. This behavior is also seen with the sequence data.
 Feature count = 275
 \end{verbatim}
 
-In conclusion, the lazy-loading parsers can provide significant performance
+In conclusion, the lazy loading parsers can provide significant performance
 benefits compared to the standard parsers. The trade-off being that records
 have a substantial overhead, so files smaller than several dozen kilobytes
 will be better served using non-lazy indexing or standard parsing.
