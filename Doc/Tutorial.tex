@@ -2688,7 +2688,7 @@ In general, extracting information from the FASTA description line is not very n
 If you can get your sequences in a well annotated file format like GenBank or EMBL,
 then this sort of annotation information is much easier to deal with.
 
-\subsection{Lazy-loading for very large records}
+\subsection{Lazy loading with parse and read for large records}
 \label{sec:SeqIO-parse-with-lazy}
 
 Lazy loading parsers can be used to efficiently and quickly fetch sequence
@@ -2742,7 +2742,7 @@ Seq('CGTAACAAGGTTTCCGTAGGTGAACCTGCGGAAGGATCATTGATGAGACCGTGG...CGC'
 This example shows why the lazy loading records are powerful; the sequence and
 features are not read from disk until requested. Further optimizations can
 be found by slicing the lazy records prior to accessing lazy-parsed values.
-Read Section~\ref{sec:SeqIO-lazy-index} for more information
+Read Section~\ref{sec:SeqIO-lazy-index} for more information.
 
 \section{Parsing sequences from compressed files}
 \label{sec:SeqIO_compressed}
@@ -3317,7 +3317,7 @@ A problem encountered with large sequence files is that sometimes only
 small segments or specific attributes will be required. To account for
 this use case, the lazy loading parsers were developed. These parsers
 speed instantiation of indexed records, reduce overall memory consumption,
-and facilitate targeted data retrieval. Currently lazy parsers have been
+and facilitate targeted data retrieval. Currently, lazy parsers have been
 developed for Fasta, GenBank, EMBL, and Uniprot-XML file formats.
 
 The lazy loading system works through the \verb|index_db| parser described
@@ -3340,7 +3340,7 @@ helps illustrate how to access the record efficiently using the lazy loader.
 \begin{verbatim}
 >>> # building a new index stored in "my_index.db"
 >>> from Bio import SeqIO
->>> indexdict = SeqIO.index_db("mydb.db", "chr1.gb", "gb", lazy=True)
+>>> indexdict = SeqIO.index_db("my_index.db", "chr1.gb", "gb", lazy=True)
 >>> list(indexdict.keys())
 ['NC_000001.11']
 \end{verbatim}
