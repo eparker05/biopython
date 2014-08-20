@@ -505,6 +505,11 @@ def parse(handle, format, alphabet=None, lazy=False):
      - alphabet - optional Alphabet object, useful when the sequence type
                   cannot be automatically inferred from the file itself
                   (e.g. format="fasta" or "tab")
+     - lazy     - optional argument (default=False). Used to access the
+                  lazy loading parser. Set to True for memory-only lazy
+                  loading. Set to a file-name to make an index and/or
+                  load from an existing index. The use of an index file
+                  is strongly recommended.
 
     Typical usage, opening a file to read in, and looping over the record(s):
 
@@ -629,6 +634,11 @@ def read(handle, format, alphabet=None, lazy=False):
      - alphabet - optional Alphabet object, useful when the sequence type
                   cannot be automatically inferred from the file itself
                   (e.g. format="fasta" or "tab")
+     - lazy     - optional argument (default=False). Used to access the
+                  lazy loading parser. Set to True for memory-only lazy
+                  loading. Set to a file-name to make an index and/or
+                  load from an existing index. The use of an index file
+                  is strongly recommended.
 
     This function is for use parsing sequence files containing
     exactly one record.  For example, reading a GenBank file:
@@ -893,6 +903,8 @@ def index_db(index_filename, filenames=None, format=None, alphabet=None,
      - key_function - Optional callback function which when given a
                   SeqRecord identifier string should return a unique
                   key for the dictionary.
+     - lazy     - optional argument (default=False). Used to access the
+                  lazy loading indexer and parser.
 
     This indexing function will return a dictionary like object, giving the
     SeqRecord objects as values:
